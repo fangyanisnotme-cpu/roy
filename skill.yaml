@@ -1,0 +1,5 @@
+name: "football_prediction"
+title: "Football Prediction"
+description: "Predict football matches for China Sports Lottery play: gather form and model data, run a Poisson/Dixon-Coles model, convert to lottery markets and parlays, record every pick and settle it after the match."
+category: "Health and fitness"
+include_in_prompt: false
