@@ -14,7 +14,11 @@
 
 ## Run the model
 
-- Estimate an expected-goals pair for each match from form, xG or a published model, then run `~/workspace/custom-skills/football_prediction/scripts/model.py predict` with those values.
+- Anchor on the market first: run `model.py fit` on the de-vigged market consensus to get the market-implied lambda pair. That pair is the baseline — the market's odds distill professional models and money flow, so start from them instead of building in a vacuum.
+
+- Adjust the lambdas only for verified information the price has not absorbed yet (rotation, injuries, motivation, weather), and state each adjustment and its reason in the recommendation. With no such information, keep the market-implied probabilities; do not manufacture an edge.
+
+- Then run `~/workspace/custom-skills/football_prediction/scripts/model.py predict` with the final lambda pair (or the evidence-based estimate when no market exists for the competition).
 
 - Fall back to the script's Elo route only when no expected-goals estimate exists, and flag Elo-based output as rough when you present it.
 
@@ -32,7 +36,9 @@
 
 ## Record and review
 
-- Record every recommendation the user may act on with `~/workspace/custom-skills/football_prediction/scripts/ledger.py add` before kickoff, one entry per market pick.
+- Record every recommendation the user may act on with `~/workspace/custom-skills/football_prediction/scripts/ledger.py add` before kickoff, one entry per market pick, including `--odds` (reference price) and `--mprob` (de-vigged market probability for the same market) so settlement can judge the adjustment against the market.
+
+- The report's `vs_market` block is the running verdict on the distillation: our Brier score vs the market's, and the hit record on picks that diverged from the market by 8+ points. If the edge stays negative over a meaningful sample, shrink adjustments toward the market anchor.
 
 - Settle finished matches with `ledger.py settle` using the final score, then run `ledger.py report` and show the user the running hit rate by market.
 

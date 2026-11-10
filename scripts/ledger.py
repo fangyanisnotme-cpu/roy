@@ -5,7 +5,8 @@ data/predictions.jsonl beside this skill.
 
 Usage:
   ledger.py add --date 2026-11-09 --league 西乙 --home Sabadell --away "Real Sociedad B" \
-      --market home_win --label 主胜 --prob 0.52 [--odds 1.70] [--confidence 中]
+      --market home_win --label 主胜 --prob 0.52 [--odds 1.70] [--confidence 中] \
+      [--mprob 0.49]   (de-vigged market probability for the same market)
   ledger.py settle --home Sabadell --score 1-0
   ledger.py report
 
@@ -48,6 +49,7 @@ def add(args):
         "market": args.market,
         "label": args.label or args.market,
         "prob": args.prob,
+        "mprob": args.mprob,
         "odds": args.odds,
         "confidence": args.confidence,
         "status": "open",
@@ -110,6 +112,22 @@ def report(args):
     by_market = {}
     for r in settled:
         by_market.setdefault(r["market"], []).append(r)
+    with_mkt = [r for r in settled if r.get("mprob") is not None and r.get("prob") is not None]
+    if with_mkt:
+        n = len(with_mkt)
+        our_brier = sum((r["prob"] - (1.0 if r["won"] else 0.0)) ** 2 for r in with_mkt) / n
+        mkt_brier = sum((r["mprob"] - (1.0 if r["won"] else 0.0)) ** 2 for r in with_mkt) / n
+        div = [r for r in with_mkt if abs(r["prob"] - r["mprob"]) >= 0.08]
+        vs_market = {
+            "settled_with_market_prob": n,
+            "our_brier": round(our_brier, 4),
+            "market_brier": round(mkt_brier, 4),
+            "brier_edge": round(mkt_brier - our_brier, 4),
+            "diverged_picks": len(div),
+            "diverged_won": sum(1 for r in div if r["won"]),
+        }
+    else:
+        vs_market = None
     out = {
         "total_recorded": len(rows),
         "settled": len(settled),
@@ -121,6 +139,7 @@ def report(args):
                 "hit_rate_pct": round(sum(1 for x in v if x["won"]) / len(v) * 100, 1)}
             for m, v in by_market.items()
         },
+        "vs_market": vs_market,
     }
     print(json.dumps(out, ensure_ascii=False, indent=2))
     return 0
@@ -138,6 +157,8 @@ def main():
     pa.add_argument("--market", required=True)
     pa.add_argument("--label")
     pa.add_argument("--prob", type=float)
+    pa.add_argument("--mprob", type=float,
+                    help="de-vigged market probability for the same market, decimal")
     pa.add_argument("--odds", type=float)
     pa.add_argument("--confidence")
     pa.set_defaults(fn=add)
