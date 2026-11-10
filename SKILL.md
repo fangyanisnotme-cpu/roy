@@ -8,6 +8,8 @@
 
 - Pull recent form, home and away splits, head-to-head history, injuries and at least one published model probability for each shortlisted match, cross-checking two independent sources per match.
 
+- Pull market 1X2 odds from at least two bookmaker or aggregator sources per match, following the odds-reference workflow in `references/data-sources.md`. Read public odds pages only — never register, log in or bet. Record the reference price in the ledger's `odds` field for every pick.
+
 - Treat lower-league weekday slates as lower confidence by default, and say so in the recommendation.
 
 ## Run the model
