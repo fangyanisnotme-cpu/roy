@@ -92,7 +92,16 @@ def settle(args):
     settled = 0
     for r in rows:
         if r["status"] == "open" and r["home"].lower() == args.home.lower():
-            won = evaluate(r["market"], hg, ag)
+            mkt = r["market"]
+            if mkt == "胜平负":
+                # 胜平负条目按 label 判定所选赛果：主胜/客胜/平局
+                if "主胜" in r.get("label", ""):
+                    mkt = "home_win"
+                elif "客胜" in r.get("label", ""):
+                    mkt = "away_win"
+                elif "平局" in r.get("label", ""):
+                    mkt = "draw"
+            won = evaluate(mkt, hg, ag)
             if won is None:
                 continue
             r["status"] = "settled"
